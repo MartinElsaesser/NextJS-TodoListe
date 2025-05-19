@@ -1,0 +1,123 @@
+#root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 30px;
+}
+.app {
+  width: 100%;
+  max-width: 600px;
+}
+
+*[aria-pressed="true"] {
+  background: #e2e2e8;
+  z-index: 1;
+}
+
+h1 {
+  margin: 20px 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+}
+
+.card {
+  width: 100%;
+  /* background: #e2e2e8; */
+  border: 1px solid rgb(190, 191, 207);
+  padding: 8px 16px;
+  margin-top: 4px;
+  border-radius: 4px;
+  background: white;
+  position: relative;
+  display: flex;
+  flex-direction: row;
+}
+.card__done {
+  opacity: 0.5;
+}
+.card__create {
+  border: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 20px 0;
+}
+.card__create > * {
+  margin: 0;
+  margin-bottom: 3px;
+}
+.card__create > *:last-child {
+  margin-bottom: 0;
+}
+.card--description {
+  white-space: pre;
+  line-height: 1.2em;
+}
+.card--left {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+.card--right {
+  display: flex;
+  flex-direction: row;
+  align-items: start;
+}
+
+.card__create input {
+  font-size: 14px;
+  padding: 8px 8px;
+  border-radius: 4px;
+  outline: none;
+  border: 1px solid rgb(190, 191, 207);
+}
+.card__create textarea {
+  font-size: 14px;
+  outline: none;
+  border-radius: 4px;
+  border: 1px solid rgb(190, 191, 207);
+  padding: 8px 8px;
+  resize: none;
+}
+
+.input-grow {
+  display: flex;
+}
+
+.input-grow input {
+  flex-grow: 1;
+}
+
+.button__symbol {
+  height: 30px;
+  width: 30px;
+  padding: 0;
+  background-color: red;
+  margin-left: 5px;
+}
+
+.button__handle {
+  background: #e2e2e8;
+  color: #000;
+  cursor: grab;
+}
+
+.button__danger {
+  background: #a61919;
+  color: white;
+}
+
+.button__add {
+  background: #e2e2e8;
+  font-size: 14px;
+  padding: 8px 8px;
+}
