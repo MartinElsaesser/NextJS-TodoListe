@@ -22,7 +22,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Switch } from "./Switch";
 import { SelectTodo } from "@/db/schema/db-helper-types";
-import * as backend from "@/backend";
+import {backend} from "@/backend";
 
 
 // TODO: change type to SelectTodo[]

@@ -1,3 +1,5 @@
-import * as todoService from "./services/TodoService";
+import * as todos from "./services/TodoService";
 
-export { todoService as todos };
+export const backend = {
+  todos
+};
