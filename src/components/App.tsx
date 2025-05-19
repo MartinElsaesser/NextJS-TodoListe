@@ -22,7 +22,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Switch } from "./Switch";
 import { SelectTodo } from "@/db/schema/db-helper-types";
-import * as todoService from "@/db/services/TodoService";
+import * as backend from "@/backend";
 
 
 // TODO: change type to SelectTodo[]
@@ -51,11 +51,11 @@ export function App({$todos}: {$todos:SelectTodo[]}) {
 			);
 			startTransition(async () => {
 				setOptimisticTodos(newOptimisticTodos);
-				await todoService.updateTodo({
+				await backend.todos.updateById({
 					todoId: todo.id,
-					todo: {done: !todo.done},
+					partialTodo: {done: !todo.done},
 				})
-				const allTodos = await todoService.getAllTodos();
+				const allTodos = await backend.todos.getAll();
 				startTransition(() => {
 					setTodos(allTodos);
 				});
@@ -78,11 +78,11 @@ export function App({$todos}: {$todos:SelectTodo[]}) {
 					console.log(arrayMove(optimisticTodos, fromTodoIdx, toTodoIdx));
 
 					setOptimisticTodos(arrayMove(optimisticTodos, fromTodoIdx, toTodoIdx));
-					await todoService.moveTodoBetweenPositions({
+					await backend.todos.moveBetweenPositions({
 						fromId,
 						toId,
 					})
-					const allTodos = await todoService.getAllTodos();
+					const allTodos = await backend.todos.getAll();
 					startTransition(() => {
 						setTodos(allTodos);
 					});
@@ -95,10 +95,10 @@ export function App({$todos}: {$todos:SelectTodo[]}) {
 		async (todo: SelectTodo) => {
 			startTransition(async () => {
 				setOptimisticTodos(optimisticTodos.filter(t => t.id !== todo.id));
-				await todoService.deleteTodo({
+				await backend.todos.removeById({
 					todoId: todo.id,
 				})
-				const allTodos = await todoService.getAllTodos();
+				const allTodos = await backend.todos.getAll();
 				startTransition(() => {
 					setTodos(allTodos);
 				});
@@ -124,7 +124,7 @@ export function App({$todos}: {$todos:SelectTodo[]}) {
 				},
 			]);
 
-			await todoService.createTodo({
+			await backend.todos.create({
 				todo: {
 					headline,
 					description,
@@ -132,7 +132,7 @@ export function App({$todos}: {$todos:SelectTodo[]}) {
 				}
 			})
 
-			const allTodos = await todoService.getAllTodos();
+			const allTodos = await backend.todos.getAll();
 			startTransition(() => {
 				setTodos(allTodos);
 			});

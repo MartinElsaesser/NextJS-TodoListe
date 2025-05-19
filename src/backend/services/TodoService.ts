@@ -1,18 +1,18 @@
 "use server";
 import { setTimeout } from "timers/promises";
-import { db } from "../db";
-import type { InsertTodo, TodoId, UpdateTodo } from "../schema/db-helper-types";
+import type { InsertTodo, TodoId, UpdateTodo } from "@/db/schema/db-helper-types";
+import { db } from "@/db/db";
 
 async function middleware() {
 	await setTimeout(2000)
 }
-export async function getAllTodos() {
+export async function getAll() {
 	await middleware();
 	const todos = await db.selectFrom("todo").selectAll().orderBy("position", "asc").execute();
 	return todos;
 }
 
-export async function getTodoById({ todoId }: { todoId: TodoId }) {
+export async function getById({ todoId }: { todoId: TodoId }) {
 	await middleware();
 	const todo = await db
 		.selectFrom("todo")
@@ -22,7 +22,7 @@ export async function getTodoById({ todoId }: { todoId: TodoId }) {
 	return todo;
 }
 
-export async function createTodo({ todo }: { todo: InsertTodo }) {
+export async function create({ todo }: { todo: InsertTodo }) {
 	await middleware();
 	const newTodo = await db
 		.insertInto("todo")
@@ -55,7 +55,7 @@ export async function createTodo({ todo }: { todo: InsertTodo }) {
  * @returns
  */
 
-export async function moveTodoBetweenPositions({ fromId, toId }: { fromId: TodoId; toId: TodoId }) {
+export async function moveBetweenPositions({ fromId, toId }: { fromId: TodoId; toId: TodoId }) {
 	await middleware();
 	const movedFromTodo = await db.transaction().execute(async trx => {
 		// Get the current positions of fromTodo and toTodo
@@ -118,11 +118,11 @@ export async function moveTodoBetweenPositions({ fromId, toId }: { fromId: TodoI
 	return { movedFromTodo };
 }
 
-export async function updateTodo({ todoId, todo }: { todoId: TodoId; todo: UpdateTodo }) {
+export async function updateById({ todoId, partialTodo }: { todoId: TodoId; partialTodo: UpdateTodo }) {
 	await middleware();
 	const updatedTodo = await db
 		.updateTable("todo")
-		.set(todo)
+		.set(partialTodo)
 		.where("id", "=", todoId)
 		.returningAll()
 		.execute();
@@ -130,7 +130,7 @@ export async function updateTodo({ todoId, todo }: { todoId: TodoId; todo: Updat
 	return updatedTodo;
 }
 
-export async function deleteTodo({ todoId }: { todoId: number }) {
+export async function removeById({ todoId }: { todoId: number }) {
 	await middleware();
 	const deletedTodo = await db
 		.deleteFrom("todo")
