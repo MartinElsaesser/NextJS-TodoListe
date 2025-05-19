@@ -6,7 +6,7 @@ export default async function Home() {
   const todos = await getAllTodos();
   return (
     <div id="root">
-      <App todos={todos}></App>
+      <App $todos={todos}></App>
     </div>
   );
 }

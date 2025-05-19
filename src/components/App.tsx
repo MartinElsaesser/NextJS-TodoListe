@@ -1,5 +1,5 @@
 "use client"
-import { useCallback, useState } from "react";
+import { startTransition, useCallback, useOptimistic, useState } from "react";
 import "./App.css";
 // import { honoClient } from "./clients/hono";
 // import { useHono } from "./hooks/useHono";
@@ -22,10 +22,11 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Switch } from "./Switch";
 import { SelectTodo } from "@/db/schema/db-helper-types";
+import * as todoService from "@/db/services/TodoService";
 
 
 // TODO: change type to SelectTodo[]
-export function App({todos}: {todos:SelectTodo[]}) {
+export function App({$todos}: {$todos:SelectTodo[]}) {
 	const sensors = useSensors(
 		useSensor(PointerSensor),
 		useSensor(KeyboardSensor, {
@@ -37,23 +38,106 @@ export function App({todos}: {todos:SelectTodo[]}) {
 	const [onlyUnfinishedTodos, setOnlyUnfinishedTodos] = useState(false);
 	const canCreateTodo = headline.length > 0 && description.length > 0;
 
+	const [todos, setTodos] = useState($todos);
+	const [optimisticTodos, setOptimisticTodos] = useOptimistic<SelectTodo[], SelectTodo[]>(
+		todos,
+		(_state, newOptimisticTodos) => newOptimisticTodos
+	);
+
 	const handleDoneChanged = useCallback(
 		async (todo: SelectTodo) => {
+			const newOptimisticTodos = optimisticTodos.map(t =>
+				t.id === todo.id ? { ...t, done: !t.done } : t
+			);
+			startTransition(async () => {
+				setOptimisticTodos(newOptimisticTodos);
+				await todoService.updateTodo({
+					todoId: todo.id,
+					todo: {done: !todo.done},
+				})
+				const allTodos = await todoService.getAllTodos();
+				startTransition(() => {
+					setTodos(allTodos);
+				});
+			});
 		},
-		[]
+		[optimisticTodos, setOptimisticTodos]
 	);
 	const handleDragEnd = useCallback(
 		(event: DragEndEvent) => {
+			const { active, over } = event;
+			console.log("test");
+
+			if (over?.id && active.id !== over.id) {
+				startTransition(async () => {
+					const fromId = active.id as number;
+					const toId = over!.id as number;
+
+					const fromTodoIdx = optimisticTodos.findIndex(todo => todo.id === fromId);
+					const toTodoIdx = optimisticTodos.findIndex(todo => todo.id === toId);
+					console.log(arrayMove(optimisticTodos, fromTodoIdx, toTodoIdx));
+
+					setOptimisticTodos(arrayMove(optimisticTodos, fromTodoIdx, toTodoIdx));
+					await todoService.moveTodoBetweenPositions({
+						fromId,
+						toId,
+					})
+					const allTodos = await todoService.getAllTodos();
+					startTransition(() => {
+						setTodos(allTodos);
+					});
+				});
+			}
 		},
-		[]
+		[optimisticTodos, setOptimisticTodos]
 	);
 	const handleDelete = useCallback(
 		async (todo: SelectTodo) => {
+			startTransition(async () => {
+				setOptimisticTodos(optimisticTodos.filter(t => t.id !== todo.id));
+				await todoService.deleteTodo({
+					todoId: todo.id,
+				})
+				const allTodos = await todoService.getAllTodos();
+				startTransition(() => {
+					setTodos(allTodos);
+				});
+			});
 		},
-		[]
+		[optimisticTodos, setOptimisticTodos]
 	);
 	const createTodo = useCallback(async () => {
-	}, []);
+		if (!canCreateTodo) return;
+		setDescription("");
+		setHeadline("");
+
+		startTransition(async () => {
+			setOptimisticTodos([
+				...optimisticTodos,
+				{
+					created_at: new Date(),
+					description,
+					done: false,
+					headline,
+					id: optimisticTodos.length + 1,
+					position: optimisticTodos.length + 1,
+				},
+			]);
+
+			await todoService.createTodo({
+				todo: {
+					headline,
+					description,
+					done: false,
+				}
+			})
+
+			const allTodos = await todoService.getAllTodos();
+			startTransition(() => {
+				setTodos(allTodos);
+			});
+		});
+	}, [canCreateTodo, description, headline, optimisticTodos, setOptimisticTodos]);
 
 	return (
 		<div className="app">
@@ -97,10 +181,10 @@ export function App({todos}: {todos:SelectTodo[]}) {
 				onDragEnd={handleDragEnd}
 			>
 				<SortableContext
-					items={todos.map(todo => todo.id)}
+					items={optimisticTodos.map(todo => todo.id)}
 					strategy={verticalListSortingStrategy}
 				>
-					{todos
+					{optimisticTodos
 						.filter(t => (onlyUnfinishedTodos ? t.done === false : true))
 						.map(todo => (
 							<SortableTodo
@@ -122,14 +206,7 @@ function SortableTodo({
 	onDoneChanged,
 	onDelete,
 }: {
-	todo: {
-		id: number;
-		created_at: string;
-		description: string;
-		done: boolean;
-		headline: string;
-		position: number;
-	};
+	todo: SelectTodo;
 	onDoneChanged: (todo: SelectTodo) => void;
 	onDelete: (todo: SelectTodo) => void;
 }) {
