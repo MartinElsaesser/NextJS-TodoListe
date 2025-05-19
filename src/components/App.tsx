@@ -179,6 +179,7 @@ export function App({$todos}: {$todos:SelectTodo[]}) {
 				sensors={sensors}
 				collisionDetection={closestCenter}
 				onDragEnd={handleDragEnd}
+				id={"todo-list"} // SSR hydration fix
 			>
 				<SortableContext
 					items={optimisticTodos.map(todo => todo.id)}
